@@ -1,3 +1,45 @@
 .env
 __pycache__/
 *.py[cod]
+
+# --- OS / Editor junk ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# --- Python / Poetry / venv ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+.python-version
+
+# --- Env & secrets ---
+.env
+.env.*        # .env.dev, .env.prod, dsb
+docker/env/*.env*
+*.key
+*.pem
+
+# --- Build / dist / packaging ---
+build/
+dist/
+*.egg-info/
+
+# --- Logs & coverage ---
+logs/
+*.log
+coverage.xml
+.coverage
+htmlcov/
+
+# --- Database & runtime artifacts (local only) ---
+pgdata/
+mongodata/
