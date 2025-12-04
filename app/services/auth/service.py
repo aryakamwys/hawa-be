@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app.core.security import hash_password, verify_password, create_access_token
-from app.db.models.user import User
+from app.db.models.user import User, RoleEnum
 
 
 class AuthService:
@@ -44,5 +44,15 @@ class AuthService:
         if not verify_password(password, user.password_hash):
             return None
         return create_access_token(str(user.id))
+
+    def promote_to_admin(self, *, user_id: int) -> User:
+        """Promote a user to admin role."""
+        user = self.db.query(User).filter(User.id == user_id).first()
+        if user is None:
+            raise ValueError("User not found")
+        user.role = RoleEnum.ADMIN
+        self.db.commit()
+        self.db.refresh(user)
+        return user
 
 

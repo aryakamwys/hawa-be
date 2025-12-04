@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 class Settings(BaseModel):
     secret_key: str = os.getenv("SECRET_KEY", "change-me-in-production")
+    admin_secret_key: str = os.getenv("ADMIN_SECRET_KEY", "change-admin-secret-in-production")
     access_token_expire_minutes: int = 60 * 24  # 1 day
     algorithm: str = "HS256"
 

@@ -15,6 +15,7 @@ class UserResponse(BaseModel):
     email: EmailStr
     phone_e164: str | None
     locale: str | None
+    role: str | None = None  # Include role in user response
 
     class Config:
         from_attributes = True
@@ -28,5 +29,11 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    role: str  # "user" or "admin" - untuk menentukan redirect ke dashboard mana
+
+
+class PromoteToAdminRequest(BaseModel):
+    user_id: int
+    admin_secret: str
 
 

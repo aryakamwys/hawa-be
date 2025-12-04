@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.db.postgres import Base, engine
 from app.db.models import user as user_models  # noqa: F401  # ensure model is registered
 from app.api.auth import router as auth_router
+from app.api.admin import router as admin_router
 
 # Load environment variables from .env (including DATABASE_URL)
 load_dotenv()
@@ -40,3 +41,4 @@ def on_startup() -> None:
 
     # Include routers
     app.include_router(auth_router)
+    app.include_router(admin_router)  # Admin routes - protected by get_current_admin
