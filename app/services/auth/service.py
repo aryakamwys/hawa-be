@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app.core.security import hash_password, verify_password, create_access_token
-from app.db.models.user import User, RoleEnum
+from app.db.models.user import User, RoleEnum, LanguageEnum
 
 
 class AuthService:
@@ -16,6 +16,7 @@ class AuthService:
         phone_e164: str | None,
         password: str,
         locale: str | None = None,
+        language: LanguageEnum | None = None,
     ) -> User:
         # check existing email / phone
         if self.db.query(User).filter(User.email == email).first():
@@ -31,6 +32,10 @@ class AuthService:
         )
         if locale:
             user.locale = locale
+        if language:
+            user.language = language
+        else:
+            user.language = LanguageEnum.ID  # Default
 
         self.db.add(user)
         self.db.commit()

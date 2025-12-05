@@ -42,4 +42,5 @@ htmlcov/
 
 # --- Database & runtime artifacts (local only) ---
 pgdata/
-mongodata/
+mongodata/*.json
+gen-lang-client-*.json

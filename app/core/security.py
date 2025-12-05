@@ -35,3 +35,17 @@ def decode_access_token(token: str) -> str | None:
     return payload.get("sub")
 
 
+def encrypt_user_health_data(health_data: str) -> str:
+    """Encrypt health conditions data"""
+    from app.core.privacy import get_privacy_protocol, DataClassification
+    protocol = get_privacy_protocol()
+    return protocol.encrypt_sensitive_data(health_data, DataClassification.RESTRICTED)
+
+
+def decrypt_user_health_data(encrypted_data: str) -> str:
+    """Decrypt health conditions data"""
+    from app.core.privacy import get_privacy_protocol
+    protocol = get_privacy_protocol()
+    return protocol.decrypt_sensitive_data(encrypted_data)
+
+
