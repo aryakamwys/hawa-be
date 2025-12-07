@@ -7,12 +7,50 @@ from typing import List, Dict, Any, Optional
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import base64
+import json
 
 load_dotenv()
 
 
 class SpreadsheetService:
     """Service untuk membaca dan memproses data cuaca dari spreadsheet atau Google Sheets"""
+    
+    def _clean_headers(self, headers: List[str]) -> List[str]:
+        """
+        Clean headers untuk menghindari duplikat dan header kosong.
+        
+        Args:
+            headers: List of header strings
+        
+        Returns:
+            List of cleaned headers
+        """
+        cleaned = []
+        seen_original = {}
+        seen_cleaned = set()
+        
+        for i, header in enumerate(headers):
+            original_header = str(header).strip() if header else ""
+            
+            if not original_header:
+                original_header = f"col_{i+1}"
+            
+            if original_header in seen_original:
+                seen_original[original_header] += 1
+                cleaned_header = f"{original_header}_{seen_original[original_header]}"
+            else:
+                seen_original[original_header] = 0
+                cleaned_header = original_header
+            
+            while cleaned_header in seen_cleaned:
+                seen_original[original_header] += 1
+                cleaned_header = f"{original_header}_{seen_original[original_header]}"
+            
+            cleaned.append(cleaned_header)
+            seen_cleaned.add(cleaned_header)
+        
+        return cleaned
     
     def read_from_google_sheets(
         self,
@@ -49,9 +87,16 @@ class SpreadsheetService:
         else:
             # Try to get from environment variable (JSON string)
             creds_json = os.getenv("GOOGLE_SHEETS_CREDENTIALS_JSON")
+            creds_b64 = os.getenv("GOOGLE_SHEETS_CREDENTIALS_B64") or os.getenv("GOOGLE_CREDS_B64")
             if creds_json:
-                import json
                 creds_dict = json.loads(creds_json)
+                creds = Credentials.from_service_account_info(
+                    creds_dict,
+                    scopes=['https://www.googleapis.com/auth/spreadsheets.readonly']
+                )
+            elif creds_b64:
+                decoded = base64.b64decode(creds_b64).decode("utf-8")
+                creds_dict = json.loads(decoded)
                 creds = Credentials.from_service_account_info(
                     creds_dict,
                     scopes=['https://www.googleapis.com/auth/spreadsheets.readonly']
@@ -67,7 +112,8 @@ class SpreadsheetService:
                 else:
                     raise ValueError(
                         "Google Sheets credentials not found. "
-                        "Set GOOGLE_SHEETS_CREDENTIALS_JSON or GOOGLE_SERVICE_ACCOUNT_FILE in .env"
+                        "Set GOOGLE_SHEETS_CREDENTIALS_JSON, GOOGLE_SHEETS_CREDENTIALS_B64, "
+                        "or GOOGLE_SERVICE_ACCOUNT_FILE in .env"
                     )
         
         # Connect to Google Sheets
@@ -75,8 +121,28 @@ class SpreadsheetService:
         sheet = client.open_by_key(spreadsheet_id)
         worksheet = sheet.worksheet(worksheet_name)
         
-        # Get all records
-        records = worksheet.get_all_records()
+        # Get all values (raw data)
+        all_values = worksheet.get_all_values()
+        
+        if not all_values or len(all_values) < 2:
+            return []
+        
+        # First row is headers
+        raw_headers = all_values[0]
+        cleaned_headers = self._clean_headers(raw_headers)
+        
+        # Convert to records
+        records = []
+        for row in all_values[1:]:
+            if not any(row):
+                continue
+            
+            record = {}
+            for i, value in enumerate(row):
+                if i < len(cleaned_headers):
+                    record[cleaned_headers[i]] = value.strip() if value else ""
+            records.append(record)
+        
         return records
     
     def read_weather_data(self, file_path: str) -> List[Dict[str, Any]]:
@@ -241,4 +307,5 @@ class SpreadsheetService:
         """
         required_fields = ['pm25', 'pm10']
         return all(data.get(field) is not None for field in required_fields)
+
 
