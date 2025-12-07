@@ -204,4 +204,3 @@ PROFIL PENGGUNA:
             if chunk.choices[0].delta.content:
                 full_content += chunk.choices[0].delta.content
         return self._parse_response(full_content)
-
