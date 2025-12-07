@@ -2,12 +2,13 @@
 Groq Heatmap Tips Service
 Service untuk generate AI tips untuk heatmap menggunakan Groq LLM
 """
-from groq import Groq
-from typing import Dict, Any, Optional
-import os
 import json
+import os
 from pathlib import Path
+from typing import Any, Dict, Optional, List
+
 from dotenv import load_dotenv
+from groq import Groq
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 load_dotenv(dotenv_path=BASE_DIR / ".env", override=False)
@@ -15,15 +16,15 @@ load_dotenv(dotenv_path=BASE_DIR / ".env", override=False)
 
 class GroqHeatmapTipsService:
     """Service untuk generate AI tips untuk heatmap menggunakan Groq LLM."""
-    
+
     def __init__(self):
         api_key = os.getenv("GROQ_API_KEY")
         if not api_key:
             raise ValueError("GROQ_API_KEY not set in environment variables")
-        
+
         self.client = Groq(api_key=api_key)
         self.model = "meta-llama/llama-4-scout-17b-16e-instruct"
-    
+
     def generate_tips(
         self,
         pm25: Optional[float] = None,
@@ -38,12 +39,12 @@ class GroqHeatmapTipsService:
         user_prompt = self._build_user_prompt(
             pm25, pm10, air_quality, risk_level, location, language
         )
-        
+
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
         ]
-        
+
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
@@ -53,14 +54,16 @@ class GroqHeatmapTipsService:
                 top_p=0.9,
                 response_format={"type": "json_object"},
             )
-            
+
             content = response.choices[0].message.content
             parsed = self._parse_response(content, language)
             return parsed
-            
+
+        except (ValueError, KeyError, AttributeError) as e:
+            return self._get_fallback_tips(pm25, pm10, risk_level, language)
         except Exception as e:
             return self._get_fallback_tips(pm25, pm10, risk_level, language)
-    
+
     def _build_system_prompt(self, language: str) -> str:
         prompts = {
             "id": """Anda adalah ahli kesehatan lingkungan dan kualitas udara yang berpengalaman.
@@ -122,7 +125,7 @@ Output JSON kalayan format:
 Gunakeun basa Sunda anu gampang dipahami, informatif, sareng actionable. Fokus kana tips anu relevan sareng tingkat polusi anu ditampilkeun."""
         }
         return prompts.get(language, prompts["id"])
-    
+
     def _build_user_prompt(
         self,
         pm25: Optional[float],
@@ -141,7 +144,7 @@ DATA KUALITAS UDARA:
 - Level Risiko: {risk_level.upper() if risk_level else 'Tidak tersedia'}
 - Lokasi: {location if location else 'Tidak tersedia'}
 """
-        
+
         task_prompts = {
             "id": """Berdasarkan data di atas, berikan:
 1. Penjelasan singkat tentang kondisi polusi udara saat ini di lokasi tersebut
@@ -165,10 +168,10 @@ Focus on actionable tips that are easy to understand for the general public. Tip
 
 Fokus kana tips anu actionable sareng gampang dipahami ku masarakat umum. Tips kedah relevan sareng tingkat polusi anu ditampilkeun."""
         }
-        
+
         task = task_prompts.get(language, task_prompts["id"])
         return f"{data_info}\n\n{task}"
-    
+
     def _parse_response(self, content: str, language: str) -> Dict[str, Any]:
         try:
             if content.startswith("```"):
@@ -177,13 +180,13 @@ Fokus kana tips anu actionable sareng gampang dipahami ku masarakat umum. Tips k
                     content = content[4:]
             content = content.strip()
             data = json.loads(content)
-            
+
             data.setdefault("title", self._get_default_title(language))
             data.setdefault("explanation", "")
             data.setdefault("tips", [])
             data.setdefault("health_impact", "")
             data.setdefault("prevention", "")
-            
+
             if isinstance(data.get("tips"), list):
                 for tip in data["tips"]:
                     if not isinstance(tip, dict):
@@ -191,11 +194,11 @@ Fokus kana tips anu actionable sareng gampang dipahami ku masarakat umum. Tips k
                     tip.setdefault("category", "Kesehatan" if language == "id" else "Health")
                     tip.setdefault("tip", "")
                     tip.setdefault("priority", "medium")
-            
+
             return data
         except json.JSONDecodeError:
             return self._get_fallback_tips(None, None, None, language)
-    
+
     def _get_default_title(self, language: str) -> str:
         titles = {
             "id": "Tips Kesehatan & Pencegahan",
@@ -203,7 +206,7 @@ Fokus kana tips anu actionable sareng gampang dipahami ku masarakat umum. Tips k
             "su": "Tips Kaséhatan & Pencegahan"
         }
         return titles.get(language, titles["id"])
-    
+
     def _get_fallback_tips(
         self,
         pm25: Optional[float],
@@ -211,6 +214,7 @@ Fokus kana tips anu actionable sareng gampang dipahami ku masarakat umum. Tips k
         risk_level: Optional[str],
         language: str
     ) -> Dict[str, Any]:
+        """Get fallback tips jika LLM error"""
         if language == "id":
             if risk_level == "high":
                 tips = [
@@ -272,10 +276,14 @@ Fokus kana tips anu actionable sareng gampang dipahami ku masarakat umum. Tips k
                 ]
                 health_impact = "Kualitas udara baik, risiko kesehatan minimal."
                 prevention = "Pertahankan kualitas udara dengan mengurangi penggunaan kendaraan pribadi dan menjaga lingkungan tetap bersih."
-            
+
             return {
                 "title": "Tips Kesehatan & Pencegahan",
-                "explanation": f"PM2.5 adalah partikel halus di udara yang dapat masuk ke paru-paru dan menyebabkan masalah kesehatan. {'Kondisi saat ini menunjukkan tingkat polusi yang ' + ('tinggi' if risk_level == 'high' else 'sedang' if risk_level == 'moderate' else 'rendah') + '.' if risk_level else 'Kondisi saat ini perlu dipantau.'}",
+                "explanation": (
+                    "PM2.5 adalah partikel halus di udara yang dapat masuk ke "
+                    "paru-paru dan menyebabkan masalah kesehatan. "
+                    f"{'Kondisi saat ini menunjukkan tingkat polusi yang ' + ('tinggi' if risk_level == 'high' else 'sedang' if risk_level == 'moderate' else 'rendah') + '.' if risk_level else 'Kondisi saat ini perlu dipantau.'}"
+                ),
                 "tips": tips,
                 "health_impact": health_impact,
                 "prevention": prevention
@@ -326,10 +334,14 @@ Fokus kana tips anu actionable sareng gampang dipahami ku masarakat umum. Tips k
                 ]
                 health_impact = "Air quality is good, minimal health risk."
                 prevention = "Maintain air quality by reducing private vehicle use and keeping the environment clean."
-            
+
             return {
                 "title": "Health & Prevention Tips",
-                "explanation": f"PM2.5 are fine particles in the air that can enter the lungs and cause health problems. {'Current conditions show ' + ('high' if risk_level == 'high' else 'moderate' if risk_level == 'moderate' else 'low') + ' pollution levels.' if risk_level else 'Current conditions need monitoring.'}",
+                "explanation": (
+                    "PM2.5 are fine particles in the air that can enter the "
+                    "lungs and cause health problems. "
+                    f"{'Current conditions show ' + ('high' if risk_level == 'high' else 'moderate' if risk_level == 'moderate' else 'low') + ' pollution levels.' if risk_level else 'Current conditions need monitoring.'}"
+                ),
                 "tips": tips,
                 "health_impact": health_impact,
                 "prevention": prevention
