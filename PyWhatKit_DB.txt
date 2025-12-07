@@ -48,3 +48,13 @@ Time: 15:24
 Phone Number: +6285215339384
 Message: ⚠️ *PERINGATAN KUALITAS UDARA**Level Risiko:* MEDIUM*Kekhawatiran Utama:*Polusi udara sedang, berpotensi membahayakan kesehatan terutama bagi penderita asma*Rekomendasi Personalisasi:*Bagi Anda dengan kondisi asma, pastikan untuk selalu membawa inhaler dan obat-obatan yang diperlukan. Jika gejala asma meningkat, segera hubungi dokter atau layanan kesehatan darurat.*Rekomendasi Tindakan:*🔴 Batasi aktivitas luar ruangan, terutama saat pagi dan sore hari🟡 Gunakan masker yang dapat menyaring partikel kecil (FFP2 atau FFP3) saat beraktivitas luar ruangan🟢 Pastikan stok obat-obatan yang cukup dan ikuti regimen pengobatan yang telah ditentukan⏰ *Cek ulang:* 2025-11-24 06:00:00_HAWA - Air Quality Monitoring System_
 --------------------
+Date: 5/12/2025
+Time: 19:54
+Phone Number: +6285215339384
+Message: ⚠️ *PERINGATAN KUALITAS UDARA**Tingkat Résiko:* MEDIUM*Kekhawatiran Utama:*PM2.5*Rekomendasi Personalisasi:*Penderita asthma, pastikan untuk membawa inhaler saat beraktivitas outdoor*Tindakan:*🔴 Batasi aktivitas outdoor🟡 Gunakan masker saat beraktivitas outdoor🟢 Pastikan stok obat asthma mencukupi⏰ *Mariksa deui:* 2025-12-05 21:54:06_HAWA - Air Quality Monitoring System_
+--------------------
+Date: 5/12/2025
+Time: 19:54
+Phone Number: +6285215339384
+Message: ⚠️ *PERINGATAN KUALITAS UDARA**Tingkat Résiko:* MEDIUM*Kekhawatiran Utama:*Particulate Matter (PM2.5)*Rekomendasi Personalisasi:*Warga dengan kondisi asma perlu memantau kualitas udara dan membatasi aktivitas outdoor saat kualitas udara sedang*Tindakan:*🔴 Batasi aktivitas outdoor🟡 Gunakan masker saat keluar rumah🟢 Pastikan obat-obatan tersedia⏰ *Mariksa deui:* 2025-12-05 21:54:42_HAWA - Air Quality Monitoring System_
+--------------------
